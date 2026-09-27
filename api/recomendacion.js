@@ -4,7 +4,11 @@
 // La clave de Gemini se lee de la variable de entorno GEMINI_API_KEY (configurada en Vercel),
 // por lo que nunca aparece en el código ni en GitHub.
 
-const MODELO_POR_DEFECTO = 'gemini-3.5-flash';
+// Modelos a intentar en orden. Si uno está saturado o no disponible, se prueba el siguiente.
+// Se puede fijar otra lista con la variable de entorno GEMINI_MODEL (separados por coma).
+const MODELOS_POR_DEFECTO = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.7-flash'];
+const TIEMPO_MAX_POR_INTENTO_MS = 12000;
+const TIEMPO_MAX_TOTAL_MS = 25000;
 const DIMENSIONES = ['ambiental', 'territorial', 'patrimonial', 'humana', 'reglas'];
 
 const INSTRUCCIONES = `Eres el componente de redacción de un Sistema de Apoyo a la Toma de Decisiones (DSS) para expediciones de turismo de naturaleza en Chile.
@@ -52,7 +56,9 @@ module.exports = async (req, res) => {
     res.status(503).json({ error: 'La capa de IA no está configurada (falta GEMINI_API_KEY).' });
     return;
   }
-  const modelo = process.env.GEMINI_MODEL || MODELO_POR_DEFECTO;
+  const modelos = process.env.GEMINI_MODEL
+    ? process.env.GEMINI_MODEL.split(',').map(m => m.trim()).filter(Boolean)
+    : MODELOS_POR_DEFECTO;
 
   let datos = req.body;
   if (typeof datos === 'string') {
@@ -81,42 +87,63 @@ module.exports = async (req, res) => {
     }
   };
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`;
-    const respuesta = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(cuerpo)
-    });
-    const json = await respuesta.json();
+  const inicio = Date.now();
+  const errores = [];
 
-    if (!respuesta.ok) {
-      const detalle = (json && json.error && json.error.message) || `HTTP ${respuesta.status}`;
-      res.status(502).json({ error: 'Gemini devolvió un error: ' + detalle });
-      return;
-    }
+  for (const modelo of modelos) {
+    const restante = TIEMPO_MAX_TOTAL_MS - (Date.now() - inicio);
+    if (restante < 3000) break;
 
-    const texto = json?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    let resultado;
+    const control = new AbortController();
+    const temporizador = setTimeout(() => control.abort(), Math.min(TIEMPO_MAX_POR_INTENTO_MS, restante));
     try {
-      resultado = JSON.parse(texto.replace(/^```(?:json)?\s*|\s*```$/g, ''));
-    } catch (e) {
-      res.status(502).json({ error: 'La respuesta del modelo no tuvo el formato esperado.' });
-      return;
-    }
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`;
+      const respuesta = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(cuerpo),
+        signal: control.signal
+      });
+      let json = null;
+      try { json = await respuesta.json(); } catch (e) { json = null; }
 
-    const afirmaciones = Array.isArray(resultado.afirmaciones) ? resultado.afirmaciones : [];
-    res.status(200).json({
-      modelo,
-      sintesis: String(resultado.sintesis || ''),
-      afirmaciones: afirmaciones.slice(0, 10).map(a => ({
-        texto: String(a.texto || ''),
-        dimension: DIMENSIONES.includes(a.dimension) ? a.dimension : 'reglas',
-        dato_fuente: String(a.dato_fuente || '')
-      })),
-      nota_para_el_guia: String(resultado.nota_para_el_guia || '')
-    });
-  } catch (error) {
-    res.status(502).json({ error: 'No fue posible conectar con Gemini.' });
+      if (!respuesta.ok) {
+        const detalle = (json && json.error && json.error.message) || `HTTP ${respuesta.status}`;
+        errores.push(`${modelo}: ${detalle}`);
+        // 400 = solicitud mal formada: otro modelo no lo arreglaría. Clave inválida (401/403) tampoco.
+        if ([400, 401, 403].includes(respuesta.status)) break;
+        continue; // 404, 429, 500, 503 (saturado): probar el siguiente modelo
+      }
+
+      const texto = json?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+      let resultado;
+      try {
+        resultado = JSON.parse(texto.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+      } catch (e) {
+        errores.push(`${modelo}: respuesta sin el formato esperado`);
+        continue;
+      }
+
+      const afirmaciones = Array.isArray(resultado.afirmaciones) ? resultado.afirmaciones : [];
+      res.status(200).json({
+        modelo,
+        sintesis: String(resultado.sintesis || ''),
+        afirmaciones: afirmaciones.slice(0, 10).map(a => ({
+          texto: String(a.texto || ''),
+          dimension: DIMENSIONES.includes(a.dimension) ? a.dimension : 'reglas',
+          dato_fuente: String(a.dato_fuente || '')
+        })),
+        nota_para_el_guia: String(resultado.nota_para_el_guia || '')
+      });
+      return;
+    } catch (error) {
+      errores.push(`${modelo}: ${error.name === 'AbortError' ? 'tiempo de espera agotado' : 'sin conexión'}`);
+    } finally {
+      clearTimeout(temporizador);
+    }
   }
+
+  res.status(502).json({
+    error: 'Gemini no está disponible en este momento (' + (errores.join(' | ') || 'sin respuesta') + '). Intente nuevamente en unos segundos.'
+  });
 };

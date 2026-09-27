@@ -354,7 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Capa de modelo de lenguaje: envía los datos integrados + resultado de reglas a /api/recomendacion
+    let ultimoResultado = null;
     async function solicitarRecomendacionIA(res) {
+        ultimoResultado = res;
         const iaStatus = document.getElementById('ia-status');
         const iaText = document.getElementById('ia-text');
         iaText.innerHTML = '';
@@ -422,6 +424,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const iaStatus = document.getElementById('ia-status');
         iaStatus.className = 'ia-status ia-status-off';
         iaStatus.textContent = `${motivo} Se muestra solo el análisis por reglas.`;
+
+        const iaText = document.getElementById('ia-text');
+        iaText.innerHTML = '';
+        if (ultimoResultado) {
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'btn-reintentar';
+            boton.textContent = 'Reintentar recomendación con IA';
+            boton.addEventListener('click', () => solicitarRecomendacionIA(ultimoResultado));
+            iaText.appendChild(boton);
+        }
     }
 
     function escaparHTML(s) {
