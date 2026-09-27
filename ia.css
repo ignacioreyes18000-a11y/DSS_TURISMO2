@@ -1,0 +1,98 @@
+/* Estilos de la capa de IA y de la trazabilidad por dimensión */
+:root {
+    --dim-ambiental: #2f6b7c;
+    --dim-territorial: #a5412f;
+    --dim-patrimonial: #3f6e3a;
+    --dim-humana: #8e5712;
+    --dim-reglas: #4a5568;
+}
+
+.rules-box {
+    border-color: #718096;
+}
+.rules-box .box-title {
+    color: #4a5568;
+}
+
+.ia-box {
+    border-color: #6b46c1;
+}
+.ia-box .box-title {
+    color: #553c9a;
+}
+
+.ia-status {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-bottom: 10px;
+}
+.ia-status-ok {
+    color: #553c9a;
+}
+.ia-status-off {
+    color: #975a16;
+    background-color: #fffaf0;
+    border: 1px solid #fbd38d;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.ia-sintesis {
+    font-weight: 500;
+}
+
+.ai-text-content ul.ia-afirmaciones {
+    list-style: none;
+    margin-left: 0;
+}
+
+.ia-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid var(--dim-reglas);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+.ia-item.dim-ambiental { border-left-color: var(--dim-ambiental); }
+.ia-item.dim-territorial { border-left-color: var(--dim-territorial); }
+.ia-item.dim-patrimonial { border-left-color: var(--dim-patrimonial); }
+.ia-item.dim-humana { border-left-color: var(--dim-humana); }
+
+.dim-chip {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    background-color: var(--dim-reglas);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.dim-chip.dim-ambiental { background-color: var(--dim-ambiental); }
+.dim-chip.dim-territorial { background-color: var(--dim-territorial); }
+.dim-chip.dim-patrimonial { background-color: var(--dim-patrimonial); }
+.dim-chip.dim-humana { background-color: var(--dim-humana); }
+
+.ia-fuente {
+    font-size: 0.8rem;
+    color: #718096;
+    font-style: italic;
+}
+
+.ia-nota {
+    font-size: 0.9rem;
+    color: #4a5568;
+    margin-top: 6px;
+}
+
+.bio-note {
+    font-size: 0.72rem !important;
+    color: #718096;
+    margin-top: 8px;
+    font-style: italic;
+}
