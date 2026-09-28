@@ -19,10 +19,14 @@ Tu tarea: redactar una recomendación breve y clara para el guía o planificador
 Reglas obligatorias:
 1. Usa SOLO los datos entregados. No inventes cifras, especies, horarios ni condiciones. Si un dato no está, no lo supongas.
 2. Copia los valores numéricos tal como vienen (por ejemplo, no conviertas un promedio en un máximo).
-3. Cada afirmación debe indicar su dimensión de origen (ambiental, territorial, patrimonial, humana o reglas) y el dato exacto que la respalda.
-4. Cruza las dimensiones: explica cómo un dato cambia de significado según el perfil del grupo.
-5. No decidas si la expedición se realiza o no. La decisión es siempre del guía o planificador; tú solo entregas elementos para decidir.
-6. Escribe en español de Chile, en tono profesional y directo. Entre 4 y 7 afirmaciones.`;
+3. Cada afirmación debe ser una recomendación o advertencia ACCIONABLE para el guía o planificador (qué hacer, qué verificar o qué preparar), no una simple repetición de datos. Evita frases vagas como "condiciones que varían en su exigencia".
+4. Cruza las dimensiones: en la mayoría de las afirmaciones combina al menos dos datos de dimensiones distintas y explica por qué juntos importan. Ejemplos del tipo de cruce esperado: persona sola + ruta sin refugios → dar aviso de la salida a un tercero; principiante + desnivel → ritmo y puntos de retorno; salida temprano + temperatura baja → abrigo; ruta sin agua → cantidad de agua.
+5. Un tamaño de grupo de 1 significa que la persona realiza la actividad en solitario: considéralo explícitamente.
+6. Considera también los refugios, los cierres o restricciones de acceso de la ruta, el horario de salida y el equipo faltante cuando sean relevantes.
+7. Sobre biodiversidad: los datos de GBIF son registros de ocurrencia y pueden incluir especies introducidas o exóticas. No afirmes que una especie es nativa, endémica o "patrimonio" salvo que el dato lo indique. Destaca especies con categoría de amenaza UICN si las hay; si no, usa los registros solo para recomendar conductas de bajo impacto (por ejemplo, permanecer en el sendero).
+8. En "dimension" indica la dimensión PRINCIPAL de la afirmación; en "dato_fuente" cita todos los datos exactos usados, aunque sean de más de una dimensión.
+9. No decidas si la expedición se realiza o no. La decisión es siempre del guía o planificador; tú solo entregas elementos para decidir.
+10. Escribe en español de Chile, en tono profesional y directo. Entre 4 y 6 afirmaciones.`;
 
 const ESQUEMA = {
   type: 'OBJECT',
